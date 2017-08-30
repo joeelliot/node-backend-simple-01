@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<style media="screen">
+  .jumbotron{
+   background-color: rgba(0, 0, 0, 0) !important;
+   font-size: 9px;
+   color: #00ff00;
+  }
+
+  h1{
+    color: #00ff00 !important;
+  }
+
+  span{
+    color: #00ff00;
+  }
+</style>
+
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+<meta charset="utf-8">
+<title>Qr Reader</title>
+
+<script>
+    $(function(){
+
+      var iosocket = io.connect();
+
+      iosocket.on('connect', function () {
+
+          iosocket.on('message', function(message) {
+            console.log(JSON.stringify(message));
+
+            date = new Date(message.created_at);
+            new_date = ('0'+date.getDate()).slice(-2)+"/"+('0'+(date.getMonth()+1))
+            .slice(-2)+"/"+date.getFullYear()+" "+('0'+date.getHours()).slice(-2)+":"
+            +('0'+date.getMinutes()).slice(-2)+":"+('0'+date.getSeconds()).slice(-2);
+
+            $('<div class="guestbook-row"><form class="form" method="DELETE">'
+            +new_date+' || <span class="back">QR CODE: </span>'
+            +message.sith01+' || <span class="back">Mac Address: </span>'+message.sith02+
+            '</form>'+'</div>').prependTo($("#board"));
+
+          });
+
+
+      });
+
+      $.ajax({
+          url: '/api/qrcode',
+          type: 'GET',
+          dataType: 'json',
+          success: function(data) {
+            $.each(data, function(k, v){
+              date = new Date(v.created_at);
+              new_date = ('0'+date.getDate()).slice(-2)+"/"+('0'+(date.getMonth()+1))
+              .slice(-2)+"/"+date.getFullYear()+" "+('0'+date.getHours()).slice(-2)+":"
+              +('0'+date.getMinutes()).slice(-2)+":"+('0'+date.getSeconds()).slice(-2);
+
+              $('<div class="guestbook-row"><form class="form" method="DELETE">'
+              +new_date+' || <span class="back">QR CODE: </span>'
+              +v.sith01+' || <span class="back">Mac Address: </span>'+v.sith02+
+              '</form>'+'</div>').prependTo($("#board"));
+
+              $('#delete2').click(function() {
+                console.log(v._id);
+                $.ajax({
+                  url: '/api/qrcode/'+ v._id,
+                  type: 'DELETE'
+                });
+              });
+            });
+          }
+      });
+
+      $("#dab").click(function () {
+        var formData = {
+          sith01: "HI"
+        };
+        $.ajax({
+              url: 'api/qrcode',
+              type: 'POST',
+              dataType: 'json',
+              data: formData,
+              success: function(data) {
+              }
+        });
+
+        return false;
+      });
+  });
+</script>
+</head>
+
+<body style="background-color:black;">
+<center>
+
+<h1>Qr Reader</h1>
+
+</center>
+
+<div class="jumbotron" id="board">
+</div>
+
+<!--<button id="dab">Submit</button>-->
+</body>
+</html>
